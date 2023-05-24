@@ -1,0 +1,27 @@
+spec:
+  template:
+    spec:
+      containers:
+        - name: business-api-ecosystem-biz-ecosystem-charging-backend
+          volumeMounts:
+            - name: i4trustplugin
+              mountPath: /opt/business-ecosystem-charging-backend/src/plugins/i4trust_service.py
+              subPath: i4trust_service.py
+              readOnly: true
+            - name: i4trustpackage
+              mountPath: /opt/business-ecosystem-charging-backend/src/plugins/package.json
+              subPath: package.json
+              readOnly: true
+      volumes:
+        - name: i4trustplugin
+          configMap:
+            name: i4trustplugin
+            items:
+            - key: i4trust_service.py
+              path: i4trust_service.py
+        - name: i4trustpackage
+          configMap:
+            name: i4trustpackage
+            items:
+            - key: package.json
+              path: package.json

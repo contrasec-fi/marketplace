@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  creationTimestamp: null
+  labels:
+    app: mongo
+  name: mongo
+spec:
+  selector:
+    matchLabels:
+      app: mongo
+  replicas: 1
+  serviceName: mongo
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: mongo
+    spec:
+      containers:
+      - name: mongo
+        image: mongo:4.4
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: MONGODB_ROOT_USER
+          value: root
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: pass
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: root
+        volumeMounts:
+        - mountPath: /data/db
+          name: mongo
+      restartPolicy: Always
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        annotations:
+          volume.beta.kubernetes.io/storage-class: ceph-block
+        creationTimestamp: null
+        name: mongo
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi
+        storageClassName: ceph-block
+        volumeMode: Filesystem
+      status:
+        phase: Pending
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: mongo
+  name: mongo
+spec:
+  ports:
+  - name: "27017"
+    port: 27017
+    targetPort: 27017
+  selector:
+    app: mongo
+status:
+  loadBalancer: {}
+
+

@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    kubernetes.io/ingress.class: nginx
+    large-client-header-buffers: "8 32k"
+    http2-max-field-size: "32k"
+    http2-max-header-size: "32k"
+  name: marketplace
+  namespace: marketplace
+spec:
+  rules:
+  - host: marketplace.DOMAIN
+    http:
+      paths:
+      - backend:
+          service:
+            name: marketplace-biz-ecosystem-logic-proxy
+            port:
+              number: 8004
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - marketplace.DOMAIN
+    secretName: marketplace-cert

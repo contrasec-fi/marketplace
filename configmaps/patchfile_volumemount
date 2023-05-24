@@ -1,0 +1,20 @@
+spec:
+  template:
+    spec:
+      containers:
+        volumeMounts:
+        - mountPath: /opt/business-ecosystem-charging-backend/src/plugins/i4trust_service.py
+          name: i4trustplugin
+          subPath: i4trust_service.py
+        - mountPath: /opt/business-ecosystem-charging-backend/src/plugins/package.json
+          name: i4trustpackage
+          subPath: package.json
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: i4trustplugin
+        name: i4trustplugin
+      - configMap:
+          defaultMode: 420
+          name: i4trustpackage
+        name: i4trustpackage

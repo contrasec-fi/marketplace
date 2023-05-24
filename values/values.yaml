@@ -1,0 +1,752 @@
+# Default values for business-api-ecosystem.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+## -- option to override the name config in the _helpers.tpl for the whole chart
+nameOverride: ""
+## -- option to override the fullname config in the _helpers.tpl for the whole chart
+fullnameOverride: ""
+
+
+## Marketplace OAuth, roles and IdM configuration
+##
+oauth:
+  # -- External URL of the FIWARE IDM used for user authentication
+  server: https://accounts.DOMAIN
+  # -- OAuth2 Client ID of the BAE application
+  clientId: CLIENTID
+  # -- OAuth2 Client Secret of the BAE application
+  clientSecret: CLIENTSECRET
+  # -- Callback URL path of frontend logic proxy for receiving the access tokens
+  # (callback URL would be e.g. externalUrl/auth/fiware/callback)
+  callbackPath: /auth/fiware/callback
+  # -- Set to true if OpenID Connect protocol should be used
+  oidc: false
+  # -- Granted role
+  grantedrole: admin
+  # -- Admin role
+  adminrole: admin
+  # -- Seller role
+  sellerrole: seller
+  # -- Customer role
+  customerrole: customer
+  # -- Aggregator role
+  aggregatorrole: Aggregator
+  # -- Role defined in the IDM client app for organization admins of the BAE 
+  orgadminrole: orgAdmin
+  # -- IDP provider for passport strategy (fiware, keycloak, github, ...)
+  provider: fiware
+  # -- Whether the used FIWARE IDM is version 6 or lower
+  isLegacy: False
+  # Default role: Role to be used if no role is assigned to user (optional)
+  #defaultRole: seller
+
+  
+## -- External URL used to access the BAE frontend (logic proxy)
+## Should match the host of the Ingress or Route of the Logic Proxy
+##
+externalUrl: https://marketplace.DOMAIN
+
+  
+## -- initContainer images configuration needed to wait for dependant containers
+##
+initContainer:
+  ## -- Wait for MySQL database
+  mysql:
+    ## -- Name
+    name: wait-for-mysql
+    ## -- Image
+    image: "mysql"
+    ## -- Tag
+    imageTag: "5.7"
+    ## -- Image pull policy
+    imagePullPolicy: IfNotPresent
+    ## -- Maximum number of retries to check for DB avilability
+    maxRetries: 60
+    ## -- Sleep interval in s between each retry
+    sleepInterval: 5
+  ## -- Wait for MongoDB database
+  mongodb:
+    ## -- Name
+    name: wait-for-mongodb
+    ## -- Image
+    image: "bitnami/mongodb"
+    ## -- Tag
+    imageTag: "3.6.21"
+    ## -- Image pull policy
+    imagePullPolicy: IfNotPresent
+    ## -- Maximum number of retries to check for DB avilability
+    maxRetries: 60
+    ## -- Sleep interval in s between each retry
+    sleepInterval: 5
+  ## -- Wait for APIs
+  apis:
+    ## -- Name:
+    name: wait-for-apis
+    ## -- Image
+    image: busybox
+    ## -- Image pull policy
+    imagePullPolicy: IfNotPresent
+    ## -- Maximum number of retries to check for API avilability
+    maxRetries: 60
+    ## -- Sleep interval in s between each retry
+    sleepInterval: 10
+
+
+  
+## -- Configuration for biz-ecosystem-apis component
+##
+bizEcosystemApis:
+  ## -- If false, will not be installed
+  enabled: true
+
+  ## -- Configure existing secret to be used for DB password
+  # existingSecret: apis-secret
+
+  ## -- Component name
+  name: biz-ecosystem-apis
+
+  ## -- option to override the fullname config in the _helpers.tpl
+  fullnameOverride: ""
+
+  ## -- configuration for the k8s service to access the TMForum APIs
+  service:
+    ## -- service type
+    type: ClusterIP
+    ## -- port to be used by the service
+    port: 8080
+    ## -- addtional annotations, if required
+    annotations: {}
+
+  ## -- Service account
+  serviceAccount:
+    create: true
+    name: ssc
+    annotations: {}
+
+  ## -- Security context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  securityContext: {}
+
+  ## -- deployment specific configuration
+  deployment:
+    ## -- initial number of target replications, can be different if autoscaling is enabled
+    replicaCount: 1
+    ## -- number of old replicas to be retained
+    revisionHistoryLimit: 3
+    ## -- configuration of the update strategy
+    updateStrategy:
+      ## -- type of the update
+      type: RollingUpdate
+      ## -- new pods will be added gradually
+      rollingUpdate:
+        ## -- number of pods that can be created above the desired amount while updating
+        maxSurge: 1
+        ## -- number of pods that can be unavailable while updating 
+        maxUnavailable: 0
+    ## -- configuration of the image to be used
+    image:
+      ## -- BAE APIs image name
+      ## ref: https://hub.docker.com/r/fiware/biz-ecosystem-apis
+      repository: quay.io/fiware/biz-ecosystem-apis
+      ## -- tag of the image to be used
+      tag: v8.1.0-rc1@sha256:64f36ce55e349755db1c21fd0264b0180e931a00f1f997fc57b7f83fa0718e29
+      ## -- specification of the image pull policy
+      pullPolicy: IfNotPresent
+    ## -- additional labels for the deployment, if required  
+    additionalLabels: {}
+    ## -- additional annotations for the deployment, if required
+    additionalAnnotations: {}
+    ## -- selector template  
+    ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+    nodeSelector: {}
+    ## -- tolerations template
+    ## ref: ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+    tolerations: []
+    ## -- affinity template
+    ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+    affinity: {}
+    ## -- liveness and readiness probes
+    # ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+    livenessProbe:
+      initialDelaySeconds: 120
+      periodSeconds: 30
+      successThreshold: 1
+      timeoutSeconds: 30
+    readinessProbe:
+      initialDelaySeconds: 61
+      periodSeconds: 30
+      successThreshold: 1
+      timeoutSeconds: 30
+
+  ## -- port that the APIs container uses
+  port: 8080
+
+  ## -- database configuration for APIs
+  db:
+    ## -- host of the database to be used
+    host: mysql
+    ## -- password for connecting the database
+    password: PASS
+    
+
+
+## -- Configuration for biz-ecosystem-rss component
+##
+bizEcosystemRss:
+  ## -- If false, will not be installed
+  enabled: true
+
+  ## -- Configure existing secret to be used for DB password
+  # existingSecret: rss-secret
+
+  ## -- Component name
+  name: biz-ecosystem-rss
+
+  ## -- option to override the fullname config in the _helpers.tpl
+  fullnameOverride: ""
+
+  ## -- configuration for the k8s service to access the RSS API
+  service:
+    ## -- service type
+    type: ClusterIP
+    ## -- port to be used by the service
+    port: 8080
+    ## -- addtional annotations, if required
+    annotations: {}
+
+  ## -- Service account
+  serviceAccount:
+    create: false
+    name: ssc
+    annotations: {}
+
+  ## -- Security context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  securityContext: {}
+
+  ## -- deployment specific configuration
+  deployment:
+    ## -- initial number of target replications, can be different if autoscaling is enabled
+    replicaCount: 1
+    ## -- number of old replicas to be retained
+    revisionHistoryLimit: 3
+    ## -- configuration of the update strategy
+    updateStrategy:
+      ## -- type of the update
+      type: RollingUpdate
+      ## -- new pods will be added gradually
+      rollingUpdate:
+        ## -- number of pods that can be created above the desired amount while updating
+        maxSurge: 1
+        ## -- number of pods that can be unavailable while updating 
+        maxUnavailable: 0
+    ## -- configuration of the image to be used
+    image:
+      ## -- BAE RSS image name
+      ## ref: https://hub.docker.com/r/fiware/biz-ecosystem-rss
+      repository: quay.io/fiware/biz-ecosystem-rss
+      ## -- tag of the image to be used
+      tag: v8.0.0@sha256:4c9a4b7121181da5abb1d09c444bf94ddb4b420607a817d37c2921985d1d8e99
+      ## -- specification of the image pull policy
+      pullPolicy: IfNotPresent
+    ## -- additional labels for the deployment, if required  
+    additionalLabels: {}
+    ## -- additional annotations for the deployment, if required
+    additionalAnnotations: {}
+    ## -- selector template  
+    ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+    nodeSelector: {}
+    ## -- tolerations template
+    ## ref: ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+    tolerations: []
+    ## -- affinity template
+    ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+    affinity: {}
+    ## -- liveness and readiness probes
+    # ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+    livenessProbe:
+      initialDelaySeconds: 120
+      periodSeconds: 30
+      successThreshold: 1
+      timeoutSeconds: 30
+    readinessProbe:
+      initialDelaySeconds: 61
+      periodSeconds: 30
+      successThreshold: 1
+      timeoutSeconds: 30
+
+  ## -- port that the RSS container uses
+  port: 8080
+  
+  ## -- database configuration for RSS
+  db:
+    ## -- host of the database to be used
+    host: mysql
+    ## -- port of the database to be used
+    port: 3306
+    ## -- URL connection string of the database to be used
+    url: jdbc:mysql://mysql:3306/RSS
+    ## -- driver class name for connection to the database to be used
+    driver: com.mysql.jdbc.Driver
+    ## -- username for connecting the database
+    user: root
+    ## -- password for connecting the database
+    password: PASS
+
+
+
+## -- Configuration for biz-ecosystem-charging-backend component
+##
+bizEcosystemChargingBackend:
+  ## -- If false, will not be installed
+  enabled: true
+
+  ## -- Configure existing secret to be used for: DB password, SMTP password, Plugins IDM Password, PayPal client secret
+  # existingSecret: cb-secret
+
+  ## -- Configure existing secret to be used for: (iSHARE) token key and certificates
+  # existingCertSecret: cb-cert-secret
+
+  ## -- Component name
+  name: biz-ecosystem-charging-backend
+
+  ## -- option to override the fullname config in the _helpers.tpl
+  fullnameOverride: ""
+
+  ## -- configuration for the k8s service to access the Charging Backend API
+  service:
+    ## -- service type
+    type: ClusterIP
+    ## -- port to be used by the service
+    port: 8006
+    ## -- addtional annotations, if required
+    annotations: {}
+
+  ## -- Service account
+  serviceAccount:
+    create: false
+    name: ssc
+    annotations: {}
+
+  ## -- Security context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  securityContext: {}
+
+  ## -- deployment specific configuration
+  deployment:
+    ## -- initial number of target replications, can be different if autoscaling is enabled
+    replicaCount: 1
+    ## -- number of old replicas to be retained
+    revisionHistoryLimit: 3
+    ## -- configuration of the update strategy with PVCs mounted for persistent plugins and/or media data
+    updateStrategyPVC:
+      ## -- type of the update
+      type: Recreate
+    ## -- configuration of the update strategy (default)
+    updateStrategy:
+      ## -- type of the update
+      type: RollingUpdate
+      ## -- new pods will be added gradually
+      rollingUpdate:
+        ## -- number of pods that can be created above the desired amount while updating
+        maxSurge: 1
+        ## -- number of pods that can be unavailable while updating 
+        maxUnavailable: 0
+    ## -- configuration of the image to be used
+    image:
+      ## -- BAE Charging backend image name
+      ## ref: https://hub.docker.com/r/fiware/biz-ecosystem-charging-backend
+      repository: quay.io/fiware/biz-ecosystem-charging-backend
+      ## -- tag of the image to be used
+      tag: v8.1.0-dev-rc1@sha256:cdcbd734be963b14cdd4acb77af6be9c7ba67e88cfe03bd3438585fb3d81eeea
+      ## -- specification of the image pull policy
+      pullPolicy: Always
+    ## -- additional labels for the deployment, if required  
+    additionalLabels: {}
+    ## -- additional annotations for the deployment, if required
+    additionalAnnotations: {}
+    ## -- additional volumeMounts for the deployment, if required
+    extraVolumeMounts: 
+      - name: i4trustplugin
+        mountPath: /opt/business-ecosystem-charging-backend/src/plugins
+      - name: i4trustpackage
+        mountPath: /opt/business-ecosystem-charging-backend/src/plugins
+    ## -- selector template  
+    ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+    nodeSelector: {}
+    ## -- tolerations template
+    ## ref: ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+    tolerations: []
+    ## -- affinity template
+    ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+    affinity: {}
+    ## -- liveness and readiness probes
+    # ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+    livenessProbe:
+      initialDelaySeconds: 61
+      periodSeconds: 30
+      successThreshold: 1
+      timeoutSeconds: 30
+    readinessProbe:
+      initialDelaySeconds: 60
+      periodSeconds: 30
+      successThreshold: 1
+      timeoutSeconds: 30
+
+  token:
+    enabled: true
+    identifier: "EU.EORI.PROVIDER"
+    # -- String with private key in PEM format
+    key: |
+      -----BEGIN PRIVATE KEY-----
+      REPLACE WITH OWN CERTIFICATES
+      -----END PRIVATE KEY-----
+    # -- String with certificate (chain) in PEM format
+    cert: |
+      -----BEGIN CERTIFICATE-----
+      REPLACE WITH OWN CERTIFICATES
+      -----END CERTIFICATE-----
+      -----BEGIN CERTIFICATE-----
+      REPLACE WITH OWN CERTIFICATES
+      -----END CERTIFICATE-----
+      -----BEGIN CERTIFICATE-----
+      REPLACE WITH OWN CERTIFICATES
+      -----END CERTIFICATE-----
+
+  ## -- PVC configuration for charging backend plugins
+  plugins:
+    ## -- Enable the PVC for plugins storage
+    enabled: true
+    ## -- Size of the PVC
+    size: 1Gi
+    ## -- Annotations
+    annotations: {}
+    ## -- IDM Admin username
+    idmUser: admin
+    ## -- IDM Admin password
+    idmPassword: KEYROCK_ADMIN_PASSWORD
+
+  ## -- PVC configuration for charging backend media directories (/assets and /bills)
+  media:
+    # -- Enable the PVC for media storage
+    enabled: true
+    # -- Size of the PVC
+    size: 1Gi
+    # -- Annotations
+    annotations: {}
+    
+  # -- port that the charging backend container uses
+  port: 8006
+
+  # -- Loglevel
+  loglevel: info
+
+  ## -- payment configuration
+  payment:
+    # -- method: paypal or None (testing mode payment disconected)
+    method: None
+
+  ## -- Paypal Oauth2 configuration
+  # paypal:
+    ## -- Paypal Client-ID
+    # clientId: myid
+    ## -- Paypal Client-Secret
+    # clientSecret: mysecret
+
+  ## -- database configuration for Charging backend (MongoDB)
+  db:
+    ## -- host of the database to be used
+    host: mongo
+    ## -- port of the database to be used
+    port: 27017
+    ## -- Database name for connecting the database
+    database: charging_db
+    ## -- username for connecting the database
+    user: charging
+    ## -- password for connecting the database
+    password: pass
+
+  ## -- Mailing configuration
+  email:
+    ## -- Mail address
+    mail: charging@email.com
+    ## -- SMTP configuration
+    # smtp:
+      ## -- User name
+      # user: smtp-user
+      ## -- Password
+      # password: smtp-password
+      ## -- SMTP server hostname
+      # server: smtp-host
+      ## -- SMTP server port
+      # port: 587
+
+  # -- Maximum asset upload size (in MB)
+  maxUploadSize: 428800
+    
+  # -- Whether or not the BAE validates SSL certificates on requests to external components
+  verifyRequests: True
+
+  # -- Authorize service path of the logic proxy
+  authorizeServicePath: /authorizeService/apiKeys
+
+  # -- Sets whether to expect the user access token in each request from the logic proxy
+  propagateToken: false
+  
+  ## -- Configuration for backing up the pvcs of the charging backend into a gcs-bucket
+  backup:
+    ## -- should the backup for file data be enabled
+    enabled: false
+    ## -- configuration of the image to be used
+    image:
+      repository: fiware/copy-to-gcs
+      tag: 0.0.3
+      pullPolicy: IfNotPresent
+    ## -- prefix to be used for the backup files
+    filePrefix: "charging"
+    ## -- name of the bucket to be used for backup
+    bucketName: "gs://my/bucket"
+    ## -- cron schedule for the backup to be executed
+    schedule: "* 1 *  *  *"
+    ## -- name of the secret containing the service account to be used for accessing the bucket. The account should be provided in json format and have write permission on the referenced schema
+    secretName: "gcs-secret"
+
+
+## -- Configuration for biz-ecosystem-logic-proxy component
+##
+bizEcosystemLogicProxy:
+  ## -- If false, will not be installed
+  enabled: true
+
+  ## -- Configure existing secret to be used for: DB password, OAuth2 Client Secret
+  # existingSecret: lp-secret
+
+  ## -- Configure existing secret to be used for: (iSHARE) token key and certificates
+  # existingCertSecret: lp-cert-secret
+
+  ## -- Component name
+  name: biz-ecosystem-logic-proxy
+
+  ## -- option to override the fullname config in the _helpers.tpl
+  fullnameOverride: ""
+
+  ## -- configuration for the k8s service to access the TMForum APIs
+  service:
+    ## -- service type
+    type: ClusterIP
+    ## -- port to be used by the service
+    port: 8004
+    ## -- addtional annotations, if required
+    annotations: {}
+
+  ## -- Service account
+  serviceAccount:
+    create: false
+    name: ssc
+    annotations: {}
+
+  ## -- Security context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  securityContext: {}
+
+  ## -- statefulset specific configuration
+  statefulset:
+    ## -- initial number of target replications, can be different if autoscaling is enabled
+    replicaCount: 1
+    ## -- number of old replicas to be retained
+    revisionHistoryLimit: 3
+    ## -- configuration of the update strategy
+    updateStrategy:
+      ## -- type of the update
+      type: RollingUpdate
+    ## -- configuration of the image to be used
+    image:
+      ## -- BAE Logic Proxy image name
+      ## ref: https://hub.docker.com/r/fiware/biz-ecosystem-logic-proxy
+      repository: quay.io/fiware/biz-ecosystem-logic-proxy
+      ## -- tag of the image to be used
+      tag: v8.1.0-dev-rc1@sha256:8b7be0595c20305a5357bb0a7fddd49cc88c8f8e2bc55f38f4a0f08ff8422b87
+      ## -- specification of the image pull policy
+      pullPolicy: Always
+    ## -- additional labels for the deployment, if required  
+    additionalLabels: {}
+    ## -- additional annotations for the deployment, if required
+    additionalAnnotations: {}
+    ## -- selector template  
+    ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+    nodeSelector: {}
+    ## -- tolerations template
+    ## ref: ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+    tolerations: []
+    ## -- affinity template
+    ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+    affinity: {}
+    ## -- liveness and readiness probes
+    # ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+    livenessProbe:
+      initialDelaySeconds: 61
+      periodSeconds: 30
+      successThreshold: 1
+      timeoutSeconds: 30
+    readinessProbe:
+      initialDelaySeconds: 60
+      periodSeconds: 30
+      successThreshold: 1
+      timeoutSeconds: 30
+
+  ## -- ingress configuration
+  ingress:
+    # -- should there be an ingress to connect the logic proxy with the public internet
+    enabled: false
+    # -- annotations to be added to the ingress
+    annotations: {}
+      ## example annotations, allowing cert-manager to automatically create tls-certs and forcing everything to use ssl.
+      # kubernetes.io/ingress.class: "ambassador"
+      # kubernetes.io/tls-acme: "true"
+      # ingress.kubernetes.io/ssl-redirect: "true"  
+    # -- all hosts to be provided
+    hosts: []
+      ## -- provide hosts and the paths that should be available
+      # - host: localhost
+        # paths:
+        # - /
+    # -- configure the ingress' tls
+    tls: []
+    # - secretName: marketplace-tls
+      # hosts:
+        # - marketplace.fiware.org
+
+  ## -- openshift specific route definition. Will not work on plain k8s
+  route:
+    # -- should the deployment create openshift routes
+    enabled: false
+    # -- Routes that should be created
+    routes:
+      # -- annotations to be added to the route
+      - annotations: {}
+        # -- host to be used
+        # host: localhost
+        # -- tls configuration for the route
+        tls: {}
+        # termination: edge
+        # -- configuration for certificate generation.
+        # -- see: https://github.com/FIWARE-Ops/fiware-gitops/blob/master/doc/ROUTES.md
+        certificate: {}
+        #   issuer:
+        #     kind: ClusterIssuer
+        #     name: letsencrypt-aws-prod
+
+
+  # -- port that the logic proxy container uses
+  port: 8004
+
+  ## -- If provided, this URL specifies the actual URL that is used to access the BAE when the component is proxied (e.g Apache)
+  # proxyHost: http://marketplace.fiware-proxy.org
+
+  # -- Deployment in development or in production
+  nodeEnvironment: development
+  
+  # -- Execute the collect static command on startup
+  collectStaticCommand: "True"
+  
+  ## -- database configuration for Logic Proxy (MongoDB)
+  db:
+    # -- host of the database to be used
+    host: mongo
+    # -- port of the database to be used
+    port: 27017
+    # -- Database name for connecting the database
+    database: belp_db
+    # -- username for connecting the database
+    user: belp
+    # -- password for connecting the database
+    password: pass
+
+  ## -- elasticsearch configuration
+  elastic:
+    # -- indexing engine of logic proxy
+    engine: elasticsearch
+    # -- URL of elasticsearch service
+    url: elasticsearch:9200
+    # -- API version of elasticsearch
+    version: 7.x
+
+  ## -- Base app path of logic proxy
+  basePath: /business-ecosystem-logic-proxy
+
+  ## -- Custom theme configuration
+  theme:
+      ## -- Enable theme
+      enabled: true
+      ## -- Name of the theme
+      name: i4trust
+      ## -- Size of PVC to be created
+      size: 1Gi
+      ## Image which holds the theme files
+      image: quay.io/wi_stefan/bae-i4trust-theme:1.0.1
+      # -- specification of the image pull policy
+      imagePullPolicy: Always
+      ## Path to the source theme files inside the container
+      #  Files will be copied to /themes/{{name}} with the PVC mounted at /themes
+      sourcePath: /bae-i4trust-theme
+
+  ## -- Configuration for external IDPs
+  externalIdp:
+    # -- Enable usage of external IDPs
+    enabled: true
+    # -- Show login button for local IDP on login modal dialog with list of external IDPs
+    showLocalLogin: true
+    
+  ## -- Configuration of local key and certificate for validation and generation of tokens
+  token:
+    enabled: true
+    identifier: "EU.EORI.PROVIDER"
+    # -- String with private key in PEM format
+    key: |
+      -----BEGIN PRIVATE KEY-----
+      REPLACE WITH OWN CERTIFICATES
+      -----END PRIVATE KEY-----
+    # -- String with certificate (chain) in PEM format
+    cert: |
+      -----BEGIN CERTIFICATE-----
+      REPLACE WITH OWN CERTIFICATES
+      -----END CERTIFICATE-----
+      -----BEGIN CERTIFICATE-----
+      REPLACE WITH OWN CERTIFICATES
+      -----END CERTIFICATE-----
+      -----BEGIN CERTIFICATE-----
+      REPLACE WITH OWN CERTIFICATES
+      -----END CERTIFICATE-----
+
+  # -- Sets whether the logic proxy should propagate the user access token to the backend components
+  propagateToken: false
+
+  # -- Allow to use organisations from local IDP as participants when creating or acquiring offerings
+  allowLocalEORI: false
+
+  # -- Default market owner precentage for Revenue Sharing models
+  revenueModel: 30
+
+  # -- Allow users to edit party attributes
+  allowEditParty: true
+
+  # -- additional init-containers to be added for the belp
+  extraInitContainers: {}
+  # -- additional volumes to be added for the container
+  extraContainerVolumes: {}
+  # -- additional volumes to be mounted by the container
+  extraVolumeMounts: {}
+  # -- additional configmaps to be mounted by the container
+  #extraConfigmapMounts:
+  #  - name: crt
+  #    configMap: crt
+  #    mountPath: /opt/crt
+  #    readOnly: true
+  #  - name: key
+  #    configMap: key
+  #    mountPath: /opt/key
+  #    readOnly: true
+  # -- in case the startup command should be alterd
+  command: {}
+

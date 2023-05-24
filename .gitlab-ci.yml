@@ -1,0 +1,95 @@
+stages:
+- deploy
+- misc
+
+
+# Deploy job
+.deploy_template: &deploy_template
+  tags:
+  - profirator
+  stage: deploy
+  image: dtzar/helm-kubectl
+  script:
+  - echo "$KUBE" > "$(pwd)/kube.config"
+  # SED
+  - sed -i "s/DOMAIN/${DOMAIN}/g" ./ingress/ingress.yaml
+  - sed -i "s/DOMAIN/${DOMAIN}/g" ./values/values.yaml
+  - sed -i "s/CLIENTID/${CLIENTID}/g" ./values/values.yaml
+  - sed -i "s/CLIENTSECRET/${CLIENTSECRET}/g" ./values/values.yaml
+  - sed -i "s/KEYROCK_ADMIN_PASSWORD/${KEYROCK_ADMIN_PASSWORD}/g" ./values/values.yaml
+  # Configmaps
+  - kubectl -n marketplace apply -f ./configmaps/i4trust_service.yaml --kubeconfig "$(pwd)/kube.config"
+  - kubectl -n marketplace apply -f ./configmaps/package.yaml --kubeconfig "$(pwd)/kube.config"
+  # Activation Service
+  - echo "Adding repository..."
+  - helm repo add i4trust https://i4trust.github.io/helm-charts/
+  - helm repo update
+  - helm upgrade --install activation-service i4trust/activation-service -f ./values/values-as.yaml -n marketplace --version=1.3.2 --kubeconfig "$(pwd)/kube.config"
+  # Deployments
+  # Databases
+  - kubectl -n marketplace apply -f ./deployments/mysql-deployment.yaml --kubeconfig "$(pwd)/kube.config"
+  - kubectl -n marketplace apply -f ./deployments/mongo-deployment.yaml --kubeconfig "$(pwd)/kube.config"
+  - kubectl -n marketplace apply -f ./deployments/elasticsearch-deployment.yaml --kubeconfig "$(pwd)/kube.config"
+  # Misc
+  - kubectl -n marketplace apply -f ./ingress/ingress.yaml --kubeconfig "$(pwd)/kube.config"
+  # Helm
+  - helm repo add fiware https://fiware.github.io/helm-charts
+  - helm repo update
+  - helm upgrade --install marketplace fiware/business-api-ecosystem -n marketplace -f ./values/values.yaml --version 0.5.1 --set-string initContainer.mongodb.name="mdb" --kubeconfig "$(pwd)/kube.config"
+  # Patch Charging Backend
+  - kubectl -n marketplace patch deployment/marketplace-biz-ecosystem-charging-backend --patch-file ./configmaps/patchfile_volume --kubeconfig "$(pwd)/kube.config"
+  #when: manual
+
+
+# Deploy job
+.mongo_template: &mongo_template
+  tags:
+  - profirator
+  stage: misc
+  image: bitnami/kubectl:latest
+  script:
+  - echo "$KUBE" > "$(pwd)/kube.config"
+  - kubectl -n marketplace apply -f ./jobs/mongoscript.yaml --kubeconfig "$(pwd)/kube.config"
+  allow_failure: true
+  #when: manual
+
+# Deploy i4trust plugin installation
+.plugin_template: &plugin_template
+  tags:
+  - profirator
+  stage: misc
+  image: bitnami/kubectl:latest
+  script:
+  - echo "$KUBE" > "$(pwd)/kube.config"
+  # Install i4trust plugin
+  - export CHARGING_BACKEND_POD=$(kubectl -n marketplace get po -o custom-columns=":metadata.name" --kubeconfig "$(pwd)/kube.config" | grep charging)
+  - kubectl wait pod -n marketplace $CHARGING_BACKEND_POD --for condition=Ready --timeout=30m --kubeconfig "$(pwd)/kube.config"
+  - kubectl -n marketplace exec -it $CHARGING_BACKEND_POD --kubeconfig "$(pwd)/kube.config" -- bash -c "apt update && apt install zip -y && cd plugins && zip i4trust.zip package.json i4trust_service.py && cd .. && ./manage.py loadplugin plugins/i4trust.zip"
+  allow_failure: true
+  #when: manual
+
+do deploy staging:
+  <<: *deploy_template
+  variables:
+    KUBE: "$KUBECONFIG"
+    DOMAIN: "$DOMAIN_STAGING"
+    DB_PASSWORD: "$MARKETPLACE_DB_PASSWORD"
+    CLIENTID: "$MARKETPLACE_CLIENT_ID"
+    CLIENTSECRET: "$MARKETPLACE_CLIENT_SECRET"
+    KEYROCK_ADMIN_PASSWORD: "$MARKETPLACE_ADMIN_PASSWORD"
+  only:
+    - /^odala-staging./
+
+do mongo staging:
+  <<: *mongo_template
+  variables:
+    KUBE: "$KUBECONFIG"
+  only:
+    - /^odala-staging./
+
+do plugin staging:
+  <<: *plugin_template
+  variables:
+    KUBE: "$KUBECONFIG"
+  only:
+    - /^odala-staging./

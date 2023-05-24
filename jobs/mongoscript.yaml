@@ -1,0 +1,59 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongo-script
+spec:
+  template:
+    spec:
+      containers:
+      - name: mongo-script
+        image: mongoclient/mongoclient
+        imagePullPolicy: IfNotPresent
+        args:
+        - /bin/sh
+        - -c
+        - mongo --quiet mongo:27017 < /opt/mongo/init_db.sh > /proc/1/fd/1
+        volumeMounts:
+        - name: script
+          mountPath: /opt/mongo
+      volumes:
+      - name: script
+        configMap:
+          name: mongo-script
+          items:
+          - key: init_db.sh
+            path: init_db.sh
+      restartPolicy: OnFailure
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongo-script
+data:
+  init_db.sh: |
+      set -e
+      mongo <<EOF
+      use admin
+      db.auth('root', 'pass')
+      db = db.getSiblingDB('charging_db');
+      db.createUser({
+        user: 'charging',
+        pwd: 'pass',
+        roles: [{
+            role: 'readWrite',
+            db: 'charging_db'
+          }]
+      });
+      db = db.getSiblingDB('belp_db');
+      db.createUser({
+        user: 'belp',
+        pwd: 'pass',
+        roles: [{
+            role: 'readWrite',
+            db: 'belp_db'
+          }]
+      });
+      EOF
+

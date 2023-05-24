@@ -1,0 +1,94 @@
+apiVersion: v1
+data:
+  package.json: "{\n    \"name\": \"NGSI-LD Data Service\",\n    \"author\": \"fdelavega\",\n
+    \   \"version\": \"3.0.0\",\n    \"module\": \"i4trust_service.I4TrustService\",\n
+    \   \"media_types\": [\"FIWARE NGSI-LD\"],\n    \"formats\": [\"URL\"],\n    \"overrides\":
+    [],\n    \"pull_accounting\": true,\n    \"form_order\": [\n\t\"ar_id\", \"ar_token_endpoint\",
+    \"ar_policy_endpoint\",\n\t\"minutes\",\n\t\"resource_type\",\n\t\"get_allowed\",
+    \"get_ids\", \"get_attributes\",\n\t\"patch_allowed\", \"patch_ids\", \"patch_attributes\",\n\t\"post_allowed\",
+    \"post_ids\", \"post_attributes\",\n\t\"delete_allowed\", \"delete_ids\", \"delete_attributes\",\n\t\"subscription_resource_type\",\n\t\"get_subscription_allowed\",
+    \"get_subscription_ids\", \"get_subscription_attributes\",\n\t\"patch_subscription_allowed\",
+    \"patch_subscription_ids\", \"patch_subscription_attributes\",\n\t\"post_subscription_allowed\",
+    \"post_subscription_ids\", \"post_subscription_attributes\",\n\t\"delete_subscription_allowed\",
+    \"delete_subscription_ids\", \"delete_subscription_attributes\",\n\t\"notification_allowed\",
+    \"notification_resource_type\", \"notification_ids\", \"notification_attributes\",\n\t\"sidecar_endpoint_config_allowed\"\n
+    \   ],\n    \"form\": {\n        \"minutes\": {\n            \"type\": \"text\",\n
+    \           \"label\": \"Duration in Minutes\",\n            \"placeholder\":
+    \"100000\",\n            \"mandatory\": false\n        },\n        \"ar_token_endpoint\":
+    {\n            \"type\": \"text\",\n            \"label\": \"AR /token Endpoint\",\n
+    \           \"placeholder\": \"https://pdc-as.i4trust.fiware.io/token\",\n            \"mandatory\":
+    true\n        },\n\t\"ar_policy_endpoint\": {\n            \"type\": \"text\",\n
+    \           \"label\": \"AR /createpolicy Endpoint\",\n            \"placeholder\":
+    \"https://pdc-as.i4trust.fiware.io/createpolicy\",\n            \"mandatory\":
+    true\n        },\n        \"ar_id\": {\n            \"type\": \"text\",\n            \"label\":
+    \"AR ID\",\n            \"placeholder\": \"EU.EORI.NL000000000\",\n            \"mandatory\":
+    true\n        },\n        \"resource_type\": {\n            \"type\": \"text\",\n
+    \           \"label\": \"Resource Type\",\n            \"placeholder\": \"DELIVERYORDER\",\n
+    \           \"mandatory\": false\n        },\n        \"patch_allowed\": {\n            \"type\":
+    \"checkbox\",\n            \"label\": \"PATCH Entity\",\n            \"default\":
+    false\n        },\n\t\"patch_ids\": {\n            \"type\": \"text\",\n            \"label\":
+    \"PATCH Entity Identifiers\",\n            \"placeholder\": \"id1,id2\"\n        },\n
+    \       \"patch_attributes\": {\n            \"type\": \"text\",\n            \"label\":
+    \"PATCH Entity Attributes\",\n            \"placeholder\": \"pta,pda\"\n        },\n
+    \       \"get_allowed\": {\n            \"type\": \"checkbox\",\n            \"label\":
+    \"GET Entity\",\n            \"default\": false\n        },\n\t\"get_ids\": {\n
+    \           \"type\": \"text\",\n            \"label\": \"GET Entity Identifiers\",\n
+    \           \"placeholder\": \"*\"\n        },\n        \"get_attributes\": {\n
+    \           \"type\": \"text\",\n            \"label\": \"GET Entity Attributes\",\n
+    \           \"placeholder\": \"*\"\n        },\n\t\"post_allowed\": {\n            \"type\":
+    \"checkbox\",\n            \"label\": \"POST Entity\",\n            \"default\":
+    false\n        },\n\t\"post_ids\": {\n            \"type\": \"text\",\n            \"label\":
+    \"POST Entity Identifiers\",\n            \"placeholder\": \"*\"\n        },\n
+    \       \"post_attributes\": {\n            \"type\": \"text\",\n            \"label\":
+    \"POST Entity Attributes\",\n            \"placeholder\": \"*\"\n        },\n\t\"delete_allowed\":
+    {\n            \"type\": \"checkbox\",\n            \"label\": \"DELETE Entity\",\n
+    \           \"default\": false\n        },\n\t\"delete_ids\": {\n            \"type\":
+    \"text\",\n            \"label\": \"DELETE Entity Identifiers\",\n            \"placeholder\":
+    \"*\"\n        },\n        \"delete_attributes\": {\n            \"type\": \"text\",\n
+    \           \"label\": \"DELETE Entity Attributes\",\n            \"placeholder\":
+    \"*\"\n        },\n\t\"subscription_resource_type\": {\n            \"type\":
+    \"text\",\n            \"label\": \"Subscription Type (watched entity type)\",\n
+    \           \"placeholder\": \"DELIVERYORDER\",\n            \"mandatory\": false\n
+    \       },\n\t\"patch_subscription_allowed\": {\n            \"type\": \"checkbox\",\n
+    \           \"label\": \"PATCH Subscription\",\n            \"default\": false\n
+    \       },\n\t\"patch_subscription_ids\": {\n            \"type\": \"text\",\n
+    \           \"label\": \"PATCH Subscription Identifiers (Subscription IDs)\",\n
+    \           \"placeholder\": \"id1,id2\"\n        },\n        \"patch_subscription_attributes\":
+    {\n            \"type\": \"text\",\n            \"label\": \"PATCH Subscription
+    Attributes (Notification attributes)\",\n            \"placeholder\": \"pta,pda\"\n
+    \       },\n        \"get_subscription_allowed\": {\n            \"type\": \"checkbox\",\n
+    \           \"label\": \"GET Subscription\",\n            \"default\": false\n
+    \       },\n\t\"get_subscription_ids\": {\n            \"type\": \"text\",\n            \"label\":
+    \"GET Subscription Identifiers (Subscription IDs)\",\n            \"placeholder\":
+    \"*\"\n        },\n        \"get_subscription_attributes\": {\n            \"type\":
+    \"text\",\n            \"label\": \"GET Subscription Attributes (Notification
+    attributes)\",\n            \"placeholder\": \"*\"\n        },\n\t\"post_subscription_allowed\":
+    {\n            \"type\": \"checkbox\",\n            \"label\": \"POST Subscription\",\n
+    \           \"default\": false\n        },\n\t\"post_subscription_ids\": {\n            \"type\":
+    \"text\",\n            \"label\": \"POST Subscription Identifiers (Subscription
+    IDs)\",\n            \"placeholder\": \"*\"\n        },\n        \"post_subscription_attributes\":
+    {\n            \"type\": \"text\",\n            \"label\": \"POST Subscription
+    Attributes (Notification attributes)\",\n            \"placeholder\": \"*\"\n
+    \       },\n\t\"delete_subscription_allowed\": {\n            \"type\": \"checkbox\",\n
+    \           \"label\": \"DELETE Subscription\",\n            \"default\": false\n
+    \       },\n\t\"delete_subscription_ids\": {\n            \"type\": \"text\",\n
+    \           \"label\": \"DELETE Subscription Identifiers (Subscription IDs)\",\n
+    \           \"placeholder\": \"*\"\n        },\n        \"delete_subscription_attributes\":
+    {\n            \"type\": \"text\",\n            \"label\": \"DELETE Subscription
+    Attributes (Notification attributes)\",\n            \"placeholder\": \"*\"\n
+    \       },\n\t\"notification_resource_type\": {\n            \"type\": \"text\",\n
+    \           \"label\": \"Notification Type (entity type in notification)\",\n
+    \           \"placeholder\": \"DELIVERYORDER\",\n            \"mandatory\": false\n
+    \       },\n\t\"notification_allowed\": {\n            \"type\": \"checkbox\",\n
+    \           \"label\": \"Notifications\",\n            \"default\": false\n        },\n\t\"notification_ids\":
+    {\n            \"type\": \"text\",\n            \"label\": \"Notification Identifiers
+    (corresponding Subscription IDs)\",\n            \"placeholder\": \"id1,id2\"\n
+    \       },\n        \"notification_attributes\": {\n            \"type\": \"text\",\n
+    \           \"label\": \"Notification Attributes (entity attributes in Notification)\",\n
+    \           \"placeholder\": \"pta,pda\"\n        },\n\t\"sidecar_endpoint_config_allowed\":
+    {\n            \"type\": \"checkbox\",\n            \"label\": \"Sidecar-Proxy
+    endpoint configuration service\",\n            \"default\": false\n        }\n
+    \   }\n}\n"
+kind: ConfigMap
+metadata:
+  name: i4trustpackage
