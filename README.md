@@ -251,6 +251,12 @@ Fetch `CrowdFlowObserved` type:
 
 ---
 
+# Known issues
+
+1. Marketplace components may break down after a meanwhile, causing issues for marketplace features.
+
+---
+
 Components- Marketplace
 
 for the ODALA project.
