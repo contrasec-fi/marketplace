@@ -255,7 +255,7 @@ Fetch `CrowdFlowObserved` type:
 
 # Known issues
 
-1. Marketplace components may break down after a meanwhile, causing issues for marketplace features.
+1. Marketplace components may break down after a meanwhile, causing issues for marketplace features. An [issue](https://github.com/FIWARE-TMForum/Business-API-Ecosystem/issues/64) has been opened for the Marketplace / BIZ Api Ecosystem about this.
 
 ---
 
